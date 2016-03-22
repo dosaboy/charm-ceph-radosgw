@@ -1,3 +1,5 @@
+import sys
+
 from mock import (
     call,
     patch,
@@ -9,6 +11,13 @@ from test_utils import (
 )
 from charmhelpers.contrib.openstack.ip import PUBLIC
 
+# python-apt is not installed as part of test-requirements but is imported by
+# some charmhelpers modules so create a fake import.
+mock_apt = MagicMock()
+sys.modules['apt'] = mock_apt
+mock_apt.apt_pkg = MagicMock()
+
+
 dnsmock = MagicMock()
 modules = {
     'dns': dnsmock,
@@ -17,9 +26,12 @@ modules = {
 module_patcher = patch.dict('sys.modules', modules)
 module_patcher.start()
 
-with patch('charmhelpers.fetch.apt_install'):
-    with patch('utils.register_configs'):
-        import hooks as ceph_hooks
+with patch('charmhelpers.contrib.hardening.harden.harden') as mock_dec:
+    mock_dec.side_effect = (lambda *dargs, **dkwargs: lambda f:
+                            lambda *args, **kwargs: f(*args, **kwargs))
+    with patch('charmhelpers.fetch.apt_install'):
+        with patch('utils.register_configs'):
+            import hooks as ceph_hooks
 
 TO_PATCH = [
     'CONFIGS',

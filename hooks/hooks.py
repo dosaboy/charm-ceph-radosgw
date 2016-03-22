@@ -71,6 +71,7 @@ from utils import (
     services,
 )
 from charmhelpers.contrib.charmsupport import nrpe
+from charmhelpers.contrib.hardening.harden import harden
 
 hooks = Hooks()
 CONFIGS = register_configs()
@@ -125,6 +126,7 @@ def install_packages():
 
 
 @hooks.hook('install.real')
+@harden()
 def install():
     status_set('maintenance', 'Executing pre-install')
     execd_preinstall()
@@ -243,6 +245,7 @@ def setup_keystone_certs(unit=None, rid=None):
             'config-changed')
 @restart_on_change({'/etc/ceph/ceph.conf': ['radosgw'],
                     '/etc/haproxy/haproxy.cfg': ['haproxy']})
+@harden()
 def config_changed():
     install_packages()
 
@@ -447,6 +450,12 @@ def update_nrpe_config():
     nrpe.add_init_service_checks(nrpe_setup, services(), current_unit)
     nrpe.add_haproxy_checks(nrpe_setup, current_unit)
     nrpe_setup.write()
+
+
+@hooks.hook('update-status')
+@harden()
+def update_status():
+    log('Updating status.')
 
 
 if __name__ == '__main__':

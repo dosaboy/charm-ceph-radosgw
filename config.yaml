@@ -191,3 +191,10 @@ options:
     description: |
       A comma-separated list of nagios servicegroups.
       If left empty, the nagios_context will be used as the servicegroup
+  harden:
+    default:
+    type: string
+    description: |
+      Apply system hardening. Supports a space-delimited list of modules
+      to run. Supported modules currently include os, ssh, apache and mysql.
+
